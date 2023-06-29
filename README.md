@@ -8,4 +8,4 @@ Tunable factors:
 6. dataset: ENV.py line 80,81
 7. customed dataset needed to edit the right path
 8. lr rate of RL: DQN_agent.py Line 34
-9. Policy epsilon decayed DQN_agent Line 34
+9. Policy epsilon decayed DQN_agent Line 33
