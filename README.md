@@ -1,5 +1,5 @@
 # NAS_by_RL
-Tunable facture:
+Tunable factors:
 1. structure layers: ENV.py Line 23 self.structure_layers = __
 2. reward function: ENV.py Line 259
 3. epochs num : ENV.py Line 79
