@@ -21,7 +21,7 @@ class NAS():
             self.acc_max = 0
             self.reward_max = 0
             self.structure_layers = 4
-            self.kernal_size = [6 for _ in range(self.structure_layers)]    # 1,3,5,7,9
+            self.kernal_size = [5 for _ in range(self.structure_layers)]    # 1,3,5,7,9
             self.filters_num = [32 for _ in range(self.structure_layers)]   # 6~64
             self.state = [self.kernal_size,self.filters_num]
 
@@ -304,7 +304,7 @@ class NAS():
     def reset(self):
             self.done = False
             self.reward = 0
-            self.kernal_size = [6 for _ in range(self.structure_layers)]
+            self.kernal_size = [5 for _ in range(self.structure_layers)]
             self.filters_num = [32 for _ in range(self.structure_layers)]     
             self.state = [self.kernal_size,self.filters_num]
             self.acc_old = 0.65
