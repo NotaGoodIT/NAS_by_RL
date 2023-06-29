@@ -1,0 +1,6 @@
+-------------------------------
+ep = 77 step = 1
+kernal size for each layer: [6, 6, 6, 6] 
+filter num for each layer: [31, 31, 33, 32] 
+reward: 2.602680479312477 
+accuracy: 0.8805590867996216 
