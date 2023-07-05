@@ -6,7 +6,7 @@
 #DDQN
 #learning rate = 0.01
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="-1"
+# os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 from ENV import NAS
 import random
 import numpy as np
@@ -119,9 +119,9 @@ def train_dqn(episode):
     loss = []
     reward_list=[]
     structure_num = 4
-    action_space = (structure_num *4) +1
+    action_space = (structure_num *2) +1
     state_space = (structure_num *2)
-    steps = 1
+    steps = 10
     env = NAS()
     agent = DQN(action_space, state_space)
     count = 0
