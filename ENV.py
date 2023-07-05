@@ -21,7 +21,7 @@ class NAS():
             self.acc_max = 0
             self.reward_max = 0
             self.structure_layers = 4
-            self.kernal_size = [5 for _ in range(self.structure_layers)]    # 1,3,5,7,9
+            self.kernal_size = [3 for _ in range(self.structure_layers)]    # 1,3,5,7,9
             self.filters_num = [32 for _ in range(self.structure_layers)]   # 6~64
             self.state = [self.kernal_size,self.filters_num]
 
@@ -36,21 +36,21 @@ class NAS():
             else:
                 # change kernal_size
                 for k in range(self.structure_layers):
-                    #### change kernal_size ###
+                    #### changefilter_num ###
                     if action == k:
-                        self.kernal_size[k] += 2
+                        self.filters_num[k] += 1
                     elif action== (k + self.structure_layers):
-                        self.kernal_size[k] -= 2
+                        self.filters_num[k] -= 1
 
                     #### change filter_num ####
-                    elif action== (k + 2*self.structure_layers):
-                        self.filters_num[k] += 1
-                    elif action== (k + 3*self.structure_layers):
-                        self.filters_num[k] -= 1
+                    # elif action== (k + 2*self.structure_layers):
+                    #     self.filters_num[k] += 1
+                    # elif action== (k + 3*self.structure_layers):
+                    #     self.filters_num[k] -= 1
                     #### do nothing ###
-                    elif action==(4*self.structure_layers):
+                    elif action==(2*self.structure_layers):
                         self.filters_num[k]=self.filters_num[k]
-                        self.kernal_size[k]=self.kernal_size[k]
+                        # self.kernal_size[k]=self.kernal_size[k]
                 self.state = [self.kernal_size, self.filters_num]
                 # print(self.kernal_size)
                 # print(self.filters_num)
@@ -58,14 +58,26 @@ class NAS():
                 # Boundary check
                 for ele in range(self.structure_layers):
                     if (self.kernal_size[ele]<1 or self.kernal_size[ele]>9 or self.filters_num[ele]<6 or self.filters_num[ele]>64):
-                        print('Out of range')
-                        self.done = True
-                        break
-                if self.done == True:
-                    self.reward=-20
-                    accuracy=0
-                else:
-                    self.reward, accuracy = self.run_NAS(ep, step, max_ep)
+                        print('Out of range, go back to boundary')
+                        f = open('Result/result.txt', 'a')
+                        f.write('Out of Range, go back to boundary\n')
+                        f.close()
+
+                        # self.done = True
+                        # break
+                        if self.filters_num[ele]<6:
+                            self.filters_num[ele] = 6
+                        elif self.filters_num[ele]>64:
+                            self.filters_num[ele] = 64
+                        self.reward, accuracy = self.run_NAS(ep, step, max_ep)
+                        
+
+
+                # if self.done == True:
+                #     self.reward=-20
+                #     accuracy=0
+                    else:
+                        self.reward, accuracy = self.run_NAS(ep, step, max_ep)
                      
 
             return self.reward, self.state, self.done, accuracy
@@ -162,7 +174,9 @@ class NAS():
 
 
                 # Model Summary
+                total_params=Model.count_params()
                 print(Model.summary())
+                print(total_params)
 
 
                 # optimizer
@@ -211,20 +225,20 @@ class NAS():
                 # print('\n---------------Saving Model-----------------')
                 # Model.save('./CNN_classfier.h5')
                 
-                return Model, test_loss, test_accuracy , Time_required
+                return Model, test_loss, test_accuracy , Time_required, total_params
             if ep ==0:
                 f = open('Result/result.txt', 'a')
                 f.write('ep = ' + str(ep)+'\n')
-                baselineModel, baselinetest_loss, baselinetest_accuracy , baselineTime = Build_Model_and_train(self.kernal_size,
+                baselineModel, baselinetest_loss, baselinetest_accuracy , baselineTime, baselineparams = Build_Model_and_train(self.kernal_size,
                                                                                                                self.filters_num)
                 self.acc = baselinetest_accuracy
+                f.write("Baselineparams: {}\n".format(baselineparams))
                 f.write("BaselineTime: {}\n".format(baselineTime))
                 f.write("BaselineAccuracy: {}\n".format(self.acc))
                 f.close()
             elif ep > 0:
                 f = open('Result/result.txt', 'a')
                 f.write('ep = ' + str(ep) + ' step = ' + str(step) + '\n')
-                f.write("kernal size for each layer: {} \n".format(self.state[0]))
                 f.write("filters num for each layer: {} \n".format(self.state[1]))
                 f.close()
                 #讀取BASELINE
@@ -251,24 +265,25 @@ class NAS():
                 
                 
                      
-                Model, loss, accuracy, Time  = Build_Model_and_train(self.kernal_size, self.filters_num)
+                Model, loss, accuracy, Time, params  = Build_Model_and_train(self.kernal_size, self.filters_num)
                 
                 #accuracy2,loss_history2 = Benchmarking.Benchmarking('mnist', [0,1], ['circuits'], [15], ['pca8'], circuit='QCNN', cost_fn= 'cross_entropy', binary=False)
                 self.acc = accuracy ##計算reward使用
                 #self.acc = accuracy1 ##計算reward使用
-                self.reward = 100*(self.acc -0.80) - 5*(Time/baselineTime)
+                self.reward = 100*(self.acc -0.80) - 5*(Time/baselineTime) - (params/1000000)
                 f = open('Result/result.txt', 'a')
-                f.write(str(loss))
-                f.write("\n")
+                f.write("Loss: {} \n".format(str(loss)))
+                
                 #f.write(str(loss_history2))
                 #f.write("\n")
+                f.write("Total params: {} \n".format(params))
                 f.write("reward: {} \n".format(self.reward))
                 f.write("accuracy: {}\n".format(self.acc))
                 f.close()
                 print("accuracy: {} ".format(self.acc))
                 
                 
-                print("kernal size for each layer: {} \n".format(self.state[0]))
+                print("Total params: {} \n".format(params))
                 print("filter num for each layer: {} \n".format(self.state[1]))
                 print("reward: {} ".format(self.reward))
 
@@ -276,7 +291,7 @@ class NAS():
                     self.acc_max = self.acc
                     f = open('bestuniformity.txt', 'w')
                     f.write('-------------------------------\nep = ' + str(ep) + ' step = ' + str(step) + '\n')
-                    f.write("kernal size for each layer: {} \n".format(self.state[0]))
+                    f.write("Total params: {} \n".format(params))
                     f.write("filter num for each layer: {} \n".format(self.state[1]))
                     f.write("reward: {} \n".format(self.reward))
                     f.write("accuracy: {} \n".format(self.acc))
@@ -286,7 +301,7 @@ class NAS():
                     self.reward_max = self.reward
                     f = open('bestuniformity.txt', 'w')
                     f.write('-------------------------------\nep = ' + str(ep) + ' step = ' + str(step) + '\n')
-                    f.write("kernal size for each layer: {} \n".format(self.state[0]))
+                    f.write("Total params: {} \n".format(params))
                     f.write("filter num for each layer: {} \n".format(self.state[1]))
                     f.write("reward: {} \n".format(self.reward))
                     f.write("accuracy: {} \n".format(self.acc))
@@ -304,7 +319,7 @@ class NAS():
     def reset(self):
             self.done = False
             self.reward = 0
-            self.kernal_size = [5 for _ in range(self.structure_layers)]
+            self.kernal_size = [3 for _ in range(self.structure_layers)]
             self.filters_num = [32 for _ in range(self.structure_layers)]     
             self.state = [self.kernal_size,self.filters_num]
             self.acc_old = 0.65
